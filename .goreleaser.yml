@@ -1,10 +1,10 @@
-project_name: {{ .PluginName }}
+project_name: output
 release:
   github:
-    owner: {{ .Owner }}
-    name: {{ .Repo }}
+    owner: GrigoriyMikhalkin
+    name: kubectl-output
 builds:
-  - id: {{ .PluginName }}
+  - id: output
     goos:
     - linux
     - windows
@@ -17,12 +17,12 @@ builds:
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/{{ .Owner }}/{{ .Repo }}/pkg/version.version=
+      -X github.com/GrigoriyMikhalkin/kubectl-output/pkg/version.version=
 archives:
-  - id: {{ .PluginName }}
+  - id: output
     builds:
-    - {{ .PluginName }}
-    name_template: {{ `"{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"` }}
+    - output
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
     - goos: windows
       format: zip
