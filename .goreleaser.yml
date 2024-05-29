@@ -15,7 +15,7 @@ builds:
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
-    main: cmd/plugin/main.go
+    main: cli/plugin/main.go
     ldflags: -s -w
       -X github.com/GrigoriyMikhalkin/kubectl-output/pkg/version.version=
 archives:

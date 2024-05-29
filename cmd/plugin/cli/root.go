@@ -1,18 +1,13 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"strings"
-	"time"
-
-	"github.com/GrigoriyMikhalkin/kubectl-output/pkg/logger"
-	"github.com/GrigoriyMikhalkin/kubectl-output/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tj/go-spin"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"os"
+	"os/exec"
+	"strings"
 )
 
 var (
@@ -26,43 +21,65 @@ func RootCmd() *cobra.Command {
 		Long:          `.`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
+		FParseErrWhitelist: cobra.FParseErrWhitelist{
+			UnknownFlags: true,
+		},
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log := logger.NewLogger()
-			log.Info("")
+			fmt.Println(os.Args[1:])
 
-			s := spin.New()
-			finishedCh := make(chan bool, 1)
-			namespaceName := make(chan string, 1)
-			go func() {
-				lastNamespaceName := ""
-				for {
-					select {
-					case <-finishedCh:
-						fmt.Printf("\r")
-						return
-					case n := <-namespaceName:
-						lastNamespaceName = n
-					case <-time.After(time.Millisecond * 100):
-						if lastNamespaceName == "" {
-							fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s", s.Next())
-						} else {
-							fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s (%s)", s.Next(), lastNamespaceName)
-						}
-					}
-				}
-			}()
-			defer func() {
-				finishedCh <- true
-			}()
-
-			if err := plugin.RunPlugin(KubernetesConfigFlags, namespaceName); err != nil {
-				return errors.Unwrap(err)
+			// Check if kubectl executable is available
+			if _, err := exec.LookPath("kubectl"); err != nil {
+				return fmt.Errorf("kubectl executable not found in PATH")
+			} else {
+				fmt.Println("kubectl executable found")
 			}
 
-			log.Info("")
+			// Call kubectl with provided args
+			c := exec.Command("kubectl", os.Args[1:]...)
+			c.Stdout = os.Stdout
+			c.Stderr = os.Stderr
+			if err := c.Run(); err != nil {
+				return fmt.Errorf("failed to run kubectl: %w", err)
+			}
+
+			//_ := get.CustomColumnsPrinter{}
+
+			//log := logger.NewLogger()
+			//log.Info("")
+			//
+			//s := spin.New()
+			//finishedCh := make(chan bool, 1)
+			//namespaceName := make(chan string, 1)
+			//go func() {
+			//	lastNamespaceName := ""
+			//	for {
+			//		select {
+			//		case <-finishedCh:
+			//			fmt.Printf("\r")
+			//			return
+			//		case n := <-namespaceName:
+			//			lastNamespaceName = n
+			//		case <-time.After(time.Millisecond * 100):
+			//			if lastNamespaceName == "" {
+			//				fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s", s.Next())
+			//			} else {
+			//				fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s (%s)", s.Next(), lastNamespaceName)
+			//			}
+			//		}
+			//	}
+			//}()
+			//defer func() {
+			//	finishedCh <- true
+			//}()
+
+			//if err := plugin.RunPlugin(KubernetesConfigFlags, namespaceName); err != nil {
+			//	return errors.Unwrap(err)
+			//}
+
+			//log.Info("")
 
 			return nil
 		},
@@ -78,7 +95,20 @@ func RootCmd() *cobra.Command {
 }
 
 func InitAndExecute() {
-	if err := RootCmd().Execute(); err != nil {
+	rootCmd := RootCmd()
+
+	// Get command
+	rootCmd.AddCommand(getCmd)
+
+	// Set command
+	setCmd := SetCmd()
+	setCmd.AddCommand(setDefaultCmd)
+	rootCmd.AddCommand(setCmd)
+
+	// List command
+	rootCmd.AddCommand(listCmd)
+
+	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
