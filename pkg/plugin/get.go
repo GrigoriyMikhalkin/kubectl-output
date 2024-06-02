@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -13,7 +14,19 @@ import (
 func RunGetCmd(args []string) {
 	var err error
 	getOpts := args[1:]
-	resourceName := getOpts[1]
+
+	// TODO: Read template config file
+	//var rtmap ResourceTmpMap
+	//cmds := getCmdPerResource(getOpts)
+	//for _, c := range cmds {
+	//	runCmd(c, rtmap)
+	//}
+
+	// Check that second argument is not a flag
+	if strings.HasPrefix(getOpts[1], "-") {
+		panic("get accepts flags only after main arguments: get (TYPE[.VERSION][.GROUP] [NAME | -l label] | TYPE[.VERSION][.GROUP]/NAME ...) [flags]")
+	}
+	resourceName := getFullResourceName(getOpts[1])
 
 	// Check if kubectl executable is available
 	if _, err = exec.LookPath("kubectl"); err != nil {
