@@ -20,7 +20,7 @@ func RootCmd() *cobra.Command {
 		Use:   "output",
 		Short: "kubectl-output is a kubectl plugin that allows to set custom output format for specific resources/namespaces.",
 		Long: `kubectl-output is a kubectl plugin that allows to set custom output format for specific resources/namespaces.
-Custom output format is based on custom-coulums: [https://kubernetes.io/docs/reference/kubectl/#custom-columns]. 
+Custom output format is based on custom-columns: [https://kubernetes.io/docs/reference/kubectl/#custom-columns]. 
 
 Example: kubectl output set pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NAMESPACE:.metadata.namespace`,
 		SilenceErrors: true,
