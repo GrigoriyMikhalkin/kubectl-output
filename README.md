@@ -4,10 +4,11 @@
 Custom output format is based on custom-columns: [https://kubernetes.io/docs/reference/kubectl/#custom-columns].
 
 Example of how user can set custom output format for `Pod` resources in `test` namespace:
-
-`kubectl output set pods -n test -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NAMESPACE:.metadata.namespace`
+```shell
+kubectl output set pods -n test -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NAMESPACE:.metadata.namespace
+```
 
 The config is stored in `~/.kube-output/resource_tmp_map.yaml` file. Which is later used to set custom output format for related requests made with `kubectl output get` command. For example:
-
-`kubectl output get pods -n test`
-
+```shell
+kubectl output get pods -n test
+```
