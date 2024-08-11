@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"github.com/GrigoriyMikhalkin/kubectl-output/pkg/plugin"
-
 	"github.com/spf13/cobra"
+
+	"github.com/GrigoriyMikhalkin/kubectl-output/pkg/plugin"
 )
 
 // SetCmd represents the set command

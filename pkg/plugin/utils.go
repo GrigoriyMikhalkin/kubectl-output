@@ -2,15 +2,16 @@ package plugin
 
 import (
 	"fmt"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"slices"
 	"strings"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-func getFullResourceName(resource string) string {
+func getFullResourceName(resource string) (string, error) {
 	// Should split resource by '.' to extract type, version and group if available
 	var t, v, g string
 	resourceParts := strings.Split(resource, ".")
@@ -91,7 +92,10 @@ func getFullResourceName(resource string) string {
 
 	}
 
-	return fullName
+	if fullName == "" {
+		return "", fmt.Errorf("resource %s not found", resource)
+	}
+	return fullName, nil
 }
 
 func discoverAPIResources() ([]*v1.APIGroup, []*v1.APIResourceList) {

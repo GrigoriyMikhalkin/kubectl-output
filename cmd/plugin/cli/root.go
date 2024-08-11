@@ -2,12 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 var (
@@ -16,9 +17,12 @@ var (
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "output",
-		Short:         "",
-		Long:          `.`,
+		Use:   "output",
+		Short: "kubectl-output is a kubectl plugin that allows to set custom output format for specific resources/namespaces.",
+		Long: `kubectl-output is a kubectl plugin that allows to set custom output format for specific resources/namespaces.
+Custom output format is based on custom-coulums: [https://kubernetes.io/docs/reference/kubectl/#custom-columns]. 
+
+Example: kubectl output set pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NAMESPACE:.metadata.namespace`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		FParseErrWhitelist: cobra.FParseErrWhitelist{
@@ -102,7 +106,6 @@ func InitAndExecute() {
 
 	// Set command
 	setCmd := SetCmd()
-	setCmd.AddCommand(setDefaultCmd)
 	rootCmd.AddCommand(setCmd)
 
 	// List command

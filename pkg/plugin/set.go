@@ -27,12 +27,12 @@ func RunSetCmd(resource, tmpName, tmp, namespace string, overwrite, setDefault b
 	//   templates:
 	//     tmpName: tmp
 
-	var (
-		err error
-		f   *os.File
-	)
+	var f *os.File
 
-	fullResourceName := getFullResourceName(resource)
+	fullResourceName, err := getFullResourceName(resource)
+	if err != nil {
+		panic(err)
+	}
 
 	_, err = os.Stat("~/.kube-output/resource_tmp_map.yaml")
 	if os.IsNotExist(err) {

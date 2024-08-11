@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/GrigoriyMikhalkin/kubectl-output/pkg/plugin"
 	"os"
+
+	"github.com/GrigoriyMikhalkin/kubectl-output/pkg/plugin"
 
 	"github.com/spf13/cobra"
 )
@@ -22,6 +23,6 @@ to quickly create a Cobra application.`,
 	},
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		plugin.RunGetCmd(os.Args)
+		plugin.RunGetCmd(args, os.Args)
 	},
 }

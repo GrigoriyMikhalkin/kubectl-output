@@ -6,14 +6,24 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-func RunGetCmd(args []string) {
-	var err error
-	getOpts := args[1:]
+// RunGetCmd accepts args and cmdLine arguments and runs kubectl command with provided arguments.
+// args -- are arguments passed to the command, not including flags.
+// cmdLine -- is command line itself split by spaces.
+func RunGetCmd(args []string, cmdLine []string) {
+	// Expect TYPE[.VERSION][.GROUP] [NAME | -l label] | TYPE[.VERSION][.GROUP]/NAME,
+	// in which case first argument should always be a resource name.
+	// If not the case, the error will be thrown later.
+	resource := args[0]
+	resourceName, err := getFullResourceName(resource)
+	if err != nil {
+		panic(err)
+	}
+
+	getOpts := cmdLine[1:]
 
 	// TODO: Read template config file
 	//var rtmap ResourceTmpMap
@@ -21,12 +31,6 @@ func RunGetCmd(args []string) {
 	//for _, c := range cmds {
 	//	runCmd(c, rtmap)
 	//}
-
-	// Check that second argument is not a flag
-	if strings.HasPrefix(getOpts[1], "-") {
-		panic("get accepts flags only after main arguments: get (TYPE[.VERSION][.GROUP] [NAME | -l label] | TYPE[.VERSION][.GROUP]/NAME ...) [flags]")
-	}
-	resourceName := getFullResourceName(getOpts[1])
 
 	// Check if kubectl executable is available
 	if _, err = exec.LookPath("kubectl"); err != nil {
