@@ -40,7 +40,7 @@ func RunGetCmd(args []string, cmdLine []string) {
 	}
 
 	// If --output/-o flag is not provided, set it to default value for resource
-	// from ~/.kube-output/resource_tmp_map.yaml
+	// from ~/.kube-output/resource_tmpl_map.yaml
 	var ofound bool
 	for _, t := range getOpts {
 		if t == "--output" || t == "-o" {
@@ -49,13 +49,13 @@ func RunGetCmd(args []string, cmdLine []string) {
 		}
 	}
 
-	// Check if ~/.kube-output/resource_tmp_map.yaml exists
+	// Check if ~/.kube-output/resource_tmpl_map.yaml exists
 	home, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
 
-	fPath := fmt.Sprintf("%s/.kube-output/resource_tmp_map.yaml", home)
+	fPath := fmt.Sprintf("%s/.kube-output/resource_tmpl_map.yaml", home)
 	_, err = os.Stat(fPath)
 	exists := err == nil
 	if !exists && !os.IsNotExist(err) {
@@ -63,7 +63,7 @@ func RunGetCmd(args []string, cmdLine []string) {
 	}
 
 	if !ofound && exists {
-		// Read ~/.kube-output/resource_tmp_map.yaml
+		// Read ~/.kube-output/resource_tmpl_map.yaml
 		// If resource is found in the file, set --output/-o flag to the value from the file
 		// If resource is not found in the file, set --output/-o flag to default value
 		f, err := os.Open(fPath)
@@ -75,7 +75,7 @@ func RunGetCmd(args []string, cmdLine []string) {
 		buf := bytes.NewBuffer(nil)
 		io.Copy(buf, f)
 
-		rtmap := ResourceTmpMap{}
+		rtmap := ResourceTmplMap{}
 		yaml.Unmarshal(buf.Bytes(), &rtmap)
 
 		r := rtmap[resourceName]

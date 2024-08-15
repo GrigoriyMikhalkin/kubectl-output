@@ -3,12 +3,19 @@ package plugin
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io"
+	"log"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
-type ResourceTmpMap map[string]*Resource
+const (
+	tmplDirPath  = "%s/.kube-output" // used as template. %s is should be replaced with home dir.
+	tmplFileName = "resource_tmpl_map.yaml"
+)
+
+type ResourceTmplMap map[string]*Resource
 
 type Resource struct {
 	Default    string
@@ -16,44 +23,43 @@ type Resource struct {
 	Templates  map[string]string
 }
 
-func RunSetCmd(resource, tmpName, tmp, namespace string, overwrite, setDefault bool) {
-	fmt.Println("set called")
+func RunSetCmd(resource, tmplName, tmpl, namespace string, overwrite, setDefault bool) {
 	// Update files in ~/.kube-output
-	// File resource_tmp_map.yaml has following format:
+	// File resource_tmpl_map.yaml has the following format:
 	// resource:
-	//   default: tmpName
+	//   default: tmplName
 	//   namespaces:
-	//     namespace: tmpName
+	//     namespace: tmplName
 	//   templates:
-	//     tmpName: tmp
-
+	//     tmplName: tmpl
 	var f *os.File
 
 	fullResourceName, err := getFullResourceName(resource)
 	if err != nil {
+		log.Fatalln(fmt.Errorf("failed to get full resource name: %w", err))
+	}
+
+	homedir, err := os.UserHomeDir()
+	if err != nil {
 		panic(err)
 	}
 
-	_, err = os.Stat("~/.kube-output/resource_tmp_map.yaml")
+	dirpath := fmt.Sprintf(tmplDirPath, homedir)
+	filepath := fmt.Sprintf("%s/%s", dirpath, tmplFileName)
+	_, err = os.Stat(filepath)
 	if os.IsNotExist(err) {
-		home, err := os.UserHomeDir()
-		if err != nil {
+		if err := os.MkdirAll(dirpath, 0755); err != nil {
 			panic(err)
 		}
 
-		if err = os.MkdirAll(fmt.Sprintf("%s/.kube-output", home), 0755); err != nil {
-			panic(err)
-		}
-
-		f, err = os.Create(fmt.Sprintf("%s/.kube-output/resource_tmp_map.yaml", home))
+		f, err = os.Create(filepath)
 		if err != nil {
 			panic(err)
 		}
 	} else if err != nil {
 		panic(err)
 	} else {
-		// Open file
-		f, err = os.Open("~/.kube-output/resource_tmp_map.yaml")
+		f, err = os.Open(filepath)
 		if err != nil {
 			panic(err)
 		}
@@ -62,10 +68,14 @@ func RunSetCmd(resource, tmpName, tmp, namespace string, overwrite, setDefault b
 	defer f.Close()
 
 	buf := bytes.NewBuffer(nil)
-	io.Copy(buf, f)
+	if _, err := io.Copy(buf, f); err != nil {
+		panic(fmt.Errorf("failed to read %s: %w", filepath, err))
+	}
 
-	rtmap := ResourceTmpMap{}
-	yaml.Unmarshal(buf.Bytes(), &rtmap)
+	rtmap := ResourceTmplMap{}
+	if err := yaml.Unmarshal(buf.Bytes(), rtmap); err != nil {
+		panic(fmt.Errorf("failed to unmarshal ResourceTmplMap: %w", err))
+	}
 
 	r := rtmap[fullResourceName]
 	if r == nil {
@@ -77,28 +87,28 @@ func RunSetCmd(resource, tmpName, tmp, namespace string, overwrite, setDefault b
 		rtmap[fullResourceName] = r
 	}
 
-	if r.Templates[tmpName] != "" {
+	if r.Templates[tmplName] != "" {
 		if overwrite {
-			r.Templates[tmpName] = tmp
+			r.Templates[tmplName] = tmpl
 		} else {
-			// TODO: log that template already exists
+			log.Fatalln(fmt.Sprintf("template %s already exists", tmplName))
 		}
 	} else {
-		r.Templates[tmpName] = tmp
+		r.Templates[tmplName] = tmpl
 		// TODO: copy tmp to ~/.kube-output/templates/tmpName if tmp is a file
 	}
 
 	if setDefault {
 		if namespace == "" {
-			r.Default = tmpName
+			r.Default = tmplName
 		} else {
-			r.Namespaces[namespace] = tmpName
+			r.Namespaces[namespace] = tmplName
 		}
 	} else if namespace != "" {
-		// TODO: log that --namespace flag is ignored if set-default is set to false
+		log.Println("--namespace flag is ignored if --set-default flag is set to false")
 	}
 
-	// Write to resource_tmp_map.yaml file
+	// Write to resource_tmpl_map.yaml file
 	rtmapBytes, err := yaml.Marshal(rtmap)
 	if err != nil {
 		panic(err)

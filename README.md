@@ -8,7 +8,7 @@ Example of how user can set custom output format for `Pod` resources in `test` n
 kubectl output set pods -n test -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NAMESPACE:.metadata.namespace
 ```
 
-The config is stored in `~/.kube-output/resource_tmp_map.yaml` file. Which is later used to set custom output format for related requests made with `kubectl output get` command. For example:
+The config is stored in `~/.kube-output/resource_tmpl_map.yaml` file. Which is later used to set custom output format for related requests made with `kubectl output get` command. For example:
 ```shell
 kubectl output get pods -n test
 ```

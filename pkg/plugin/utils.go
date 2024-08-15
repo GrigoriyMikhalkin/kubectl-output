@@ -23,7 +23,7 @@ func getFullResourceName(resource string) (string, error) {
 	case 3:
 		t, v, g = resourceParts[0], resourceParts[1], resourceParts[2]
 	default:
-		panic(fmt.Errorf("invalid resource name: %s", resource))
+		return "", fmt.Errorf("invalid resource name: %s", resource)
 	}
 
 	groups, resources := discoverAPIResources()
@@ -57,7 +57,7 @@ func getFullResourceName(resource string) (string, error) {
 					matches := r.Name == t || r.SingularName == t || slices.Contains(r.ShortNames, t)
 					if matches {
 						if fullName != "" {
-							panic(fmt.Errorf("resource name %s is too ambiguous", t))
+							return "", fmt.Errorf("resource name %s is too ambiguous", t)
 						}
 
 						gv := strings.Split(resourceList.GroupVersion, "/")
@@ -76,7 +76,7 @@ func getFullResourceName(resource string) (string, error) {
 				matches := r.Name == t || r.SingularName == t || slices.Contains(r.ShortNames, t)
 				if matches {
 					if fullName != "" {
-						panic(fmt.Errorf("resource name %s is too ambiguous", t))
+						return "", fmt.Errorf("resource name %s is too ambiguous", t)
 					}
 					gv := strings.Split(resourceList.GroupVersion, "/")
 					if len(gv) == 1 {

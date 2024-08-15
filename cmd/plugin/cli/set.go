@@ -50,21 +50,21 @@ k o set deployment --name=replicas -c=NAME:.metadata.name,READY:.status.readyRep
 		},
 	}
 
-	// Set required flags:
-	// --name - name of template
-	// --custom-columns - custom columns template
+	// Set required flags
 	setCmd.PersistentFlags().String("name", "", "Name of the custom column template")
-	setCmd.Flags().StringP("custom-columns", "c", "", "Custom columns template, can be either a string or a file path")
-	setCmd.MarkPersistentFlagRequired("name")
-	setCmd.MarkFlagRequired("custom-columns")
+	if err := setCmd.MarkPersistentFlagRequired("name"); err != nil {
+		panic(err)
+	}
 
-	// Set optional flags:
-	// --namespace - namespace to use
-	// --overwrite - overwrite existing template
-	// --set-default - set template as default, true by default
-	setCmd.PersistentFlags().StringP("namespace", "n", "", "Namespace to use, if not provided, template will be used for all namespaces")
-	setCmd.Flags().BoolP("overwrite", "o", false, "Overwrite existing template")
-	setCmd.Flags().BoolP("set-default", "d", true, "Set template as default")
+	setCmd.Flags().StringP("custom-columns", "c", "", "Custom columns template, can be either a string or a file path")
+	if err := setCmd.MarkFlagRequired("custom-columns"); err != nil {
+		panic(err)
+	}
+
+	// Set optional flags
+	setCmd.PersistentFlags().StringP("namespace", "n", "", "Namespace to use, if not provided, template will be used for all namespaces.")
+	setCmd.Flags().BoolP("overwrite", "o", false, "Overwrite existing template if exists.")
+	setCmd.Flags().BoolP("set-default", "d", true, "Set template as default, true by default. If namespace is provided, template will be set as default for that namespace.")
 
 	return setCmd
 }
