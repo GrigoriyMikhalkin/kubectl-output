@@ -95,7 +95,7 @@ func RunSetCmd(resource, tmplName, tmpl, namespace string, overwrite, setDefault
 		}
 	} else {
 		r.Templates[tmplName] = tmpl
-		// TODO: copy tmp to ~/.kube-output/templates/tmpName if tmp is a file
+		// TODO: copy tmpl to ~/.kube-output/templates/tmplName if tmpl is a filepath
 	}
 
 	if setDefault {
