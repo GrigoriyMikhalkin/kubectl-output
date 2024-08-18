@@ -2,7 +2,11 @@ package plugin
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -39,6 +43,7 @@ func RunSetCmd(resource, tmplName, tmpl, namespace string, overwrite, setDefault
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	r := rtmap[fullResourceName]
 	if r == nil {
 		r = &Resource{
@@ -49,15 +54,46 @@ func RunSetCmd(resource, tmplName, tmpl, namespace string, overwrite, setDefault
 		rtmap[fullResourceName] = r
 	}
 
+	// Check if tmpl is a file path, by checking if it contains path separators.
+	// If it is, read the file and set tmpl to the content of the file.
+	var tmplStr string
+	if strings.Contains(tmpl, string(filepath.Separator)) {
+		// Check that the file exists
+		if _, err := os.Stat(tmpl); os.IsNotExist(err) {
+			log.Fatalln(fmt.Sprintf("file %s does not exist", tmpl))
+		}
+
+		tmplBytes, err := os.ReadFile(tmpl)
+		if err != nil {
+			log.Fatalln(fmt.Errorf("failed to read file %s: %w", tmpl, err))
+		}
+
+		tmplBytesStr := string(tmplBytes)
+		tmplLines := strings.Split(tmplBytesStr, "\n")
+		tmplColumns := strings.Fields(tmplLines[0])
+		tmplFields := strings.Fields(tmplLines[1])
+		if len(tmplColumns) != len(tmplFields) {
+			log.Fatalln(fmt.Sprintf("number of defined columns and fields do not match in file %s", tmpl))
+		}
+
+		for i := 0; i < len(tmplColumns); i++ {
+			if tmplStr != "" {
+				tmplStr += ","
+			}
+			tmplStr += tmplColumns[i] + ":" + tmplFields[i]
+		}
+	} else {
+		tmplStr = tmpl
+	}
+
 	if r.Templates[tmplName] != "" {
 		if overwrite {
-			r.Templates[tmplName] = tmpl
+			r.Templates[tmplName] = tmplStr
 		} else {
 			log.Fatalln(fmt.Sprintf("template %s already exists", tmplName))
 		}
 	} else {
-		r.Templates[tmplName] = tmpl
-		// TODO: copy tmpl to ~/.kube-output/templates/tmplName if tmpl is a filepath
+		r.Templates[tmplName] = tmplStr
 	}
 
 	if setDefault {
@@ -76,6 +112,12 @@ func RunSetCmd(resource, tmplName, tmpl, namespace string, overwrite, setDefault
 		log.Fatalln(err)
 	}
 
+	if err := f.Truncate(0); err != nil {
+		log.Fatalln(fmt.Errorf("failed to truncate file %s: %w", f.Name(), err))
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		log.Fatalln(fmt.Errorf("failed to seek to start of file %s: %w", f.Name(), err))
+	}
 	_, err = f.Write(rtmapBytes)
 	if err != nil {
 		log.Fatalln(err)

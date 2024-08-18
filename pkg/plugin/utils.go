@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"slices"
 	"strings"
@@ -109,23 +110,23 @@ func getFullResourceName(resource string) (string, error) {
 func discoverAPIResources() ([]*v1.APIGroup, []*v1.APIResourceList) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	kubeconfig := fmt.Sprintf("%s/.kube/config", home)
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	groups, resources, err := clientset.Discovery().ServerGroupsAndResources()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	return groups, resources
@@ -155,7 +156,7 @@ func openTmplFile() (*os.File, error) {
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to check if file %s exists: %w", filepath, err)
 	} else {
-		f, err = os.Open(filepath)
+		f, err = os.OpenFile(filepath, os.O_RDWR, 0)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open file %s: %w", filepath, err)
 		}

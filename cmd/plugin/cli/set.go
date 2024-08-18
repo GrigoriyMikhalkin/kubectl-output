@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 
 	"github.com/GrigoriyMikhalkin/kubectl-output/pkg/plugin"
@@ -17,48 +19,48 @@ k o set deployment --name=replicas -c=NAME:.metadata.name,READY:.status.readyRep
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var (
-				name, tmp, namespace  string
+				name, tmpl, namespace string
 				overwrite, setDefault bool
 				err                   error
 			)
 			name, err = cmd.Flags().GetString("name")
 			if err != nil {
-				panic(err)
+				log.Fatalln(err)
 			}
 
 			namespace, err = cmd.Flags().GetString("namespace")
 			if err != nil {
-				panic(err)
+				log.Fatalln(err)
 			}
 
-			tmp, err = cmd.Flags().GetString("custom-columns")
+			tmpl, err = cmd.Flags().GetString("custom-columns")
 			if err != nil {
-				panic(err)
+				log.Fatalln(err)
 			}
 
 			overwrite, err = cmd.Flags().GetBool("overwrite")
 			if err != nil {
-				panic(err)
+				log.Fatalln(err)
 			}
 
 			setDefault, err = cmd.Flags().GetBool("set-default")
 			if err != nil {
-				panic(err)
+				log.Fatalln(err)
 			}
 
-			plugin.RunSetCmd(args[0], name, tmp, namespace, overwrite, setDefault)
+			plugin.RunSetCmd(args[0], name, tmpl, namespace, overwrite, setDefault)
 		},
 	}
 
 	// Set required flags
 	setCmd.PersistentFlags().String("name", "", "Name of the custom column template")
 	if err := setCmd.MarkPersistentFlagRequired("name"); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	setCmd.Flags().StringP("custom-columns", "c", "", "Custom columns template, can be either a string or a file path")
 	if err := setCmd.MarkFlagRequired("custom-columns"); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	// Set optional flags
