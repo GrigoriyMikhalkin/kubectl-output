@@ -1,26 +1,20 @@
 package plugin
 
 import (
-	"bytes"
 	"fmt"
-	"io"
+	"log"
 	"os"
 	"os/exec"
-
-	"gopkg.in/yaml.v3"
 )
 
 // RunGetCmd accepts args and cmdLine arguments and runs kubectl command with provided arguments.
 // args -- are arguments passed to the command, not including flags.
 // cmdLine -- is command line itself split by spaces.
 func RunGetCmd(args []string, cmdLine []string) {
-	// Expect TYPE[.VERSION][.GROUP] [NAME | -l label] | TYPE[.VERSION][.GROUP]/NAME,
-	// in which case first argument should always be a resource name.
-	// If not the case, the error will be thrown later.
 	resource := args[0]
 	resourceName, err := getFullResourceName(resource)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	getOpts := cmdLine[1:]
@@ -34,9 +28,7 @@ func RunGetCmd(args []string, cmdLine []string) {
 
 	// Check if kubectl executable is available
 	if _, err = exec.LookPath("kubectl"); err != nil {
-		// TODO: log that executable isn't found in PATH
-	} else {
-		fmt.Println("kubectl executable found")
+		log.Fatalln("kubectl executable not found in PATH")
 	}
 
 	// If --output/-o flag is not provided, set it to default value for resource
@@ -49,34 +41,20 @@ func RunGetCmd(args []string, cmdLine []string) {
 		}
 	}
 
-	// Check if ~/.kube-output/resource_tmpl_map.yaml exists
-	home, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-
-	fPath := fmt.Sprintf("%s/.kube-output/resource_tmpl_map.yaml", home)
-	_, err = os.Stat(fPath)
-	exists := err == nil
-	if !exists && !os.IsNotExist(err) {
-		panic(err)
-	}
-
-	if !ofound && exists {
-		// Read ~/.kube-output/resource_tmpl_map.yaml
+	if !ofound {
+		// Read template config file.
 		// If resource is found in the file, set --output/-o flag to the value from the file
 		// If resource is not found in the file, set --output/-o flag to default value
-		f, err := os.Open(fPath)
+		f, err := openTmplFile()
 		if err != nil {
-			panic(err)
+			log.Fatalln(err)
 		}
 		defer f.Close()
 
-		buf := bytes.NewBuffer(nil)
-		io.Copy(buf, f)
-
-		rtmap := ResourceTmplMap{}
-		yaml.Unmarshal(buf.Bytes(), &rtmap)
+		rtmap, err := unmarshalResourceTmplMap(f)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		r := rtmap[resourceName]
 		if r != nil {
@@ -91,6 +69,6 @@ func RunGetCmd(args []string, cmdLine []string) {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
-		// TODO: log that kubectl failed to run
+		log.Fatalln(fmt.Errorf("failed to run kubectl get command: %w", err))
 	}
 }
