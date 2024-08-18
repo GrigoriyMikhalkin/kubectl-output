@@ -1,14 +1,22 @@
 package plugin
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strings"
 
+	"gopkg.in/yaml.v3"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+)
+
+const (
+	tmplDirPath  = "%s/.kube-output" // used as template. %s is should be replaced with home dir.
+	tmplFileName = "resource_tmpl_map.yaml"
 )
 
 func getFullResourceName(resource string) (string, error) {
@@ -121,4 +129,51 @@ func discoverAPIResources() ([]*v1.APIGroup, []*v1.APIResourceList) {
 	}
 
 	return groups, resources
+}
+
+// openTmplFile opens template file. If it doesn't exist, it creates one.
+func openTmplFile() (*os.File, error) {
+	var f *os.File
+
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user home dir: %w", err)
+	}
+
+	dirpath := fmt.Sprintf(tmplDirPath, homedir)
+	filepath := fmt.Sprintf("%s/%s", dirpath, tmplFileName)
+	_, err = os.Stat(filepath)
+	if os.IsNotExist(err) {
+		if err := os.MkdirAll(dirpath, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create directory %s: %w", dirpath, err)
+		}
+
+		f, err = os.Create(filepath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create file %s: %w", filepath, err)
+		}
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to check if file %s exists: %w", filepath, err)
+	} else {
+		f, err = os.Open(filepath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open file %s: %w", filepath, err)
+		}
+	}
+
+	return f, nil
+}
+
+func unmarshalResourceTmplMap(f *os.File) (ResourceTmplMap, error) {
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, f); err != nil {
+		return nil, fmt.Errorf("failed to read templates file: %w", err)
+	}
+
+	rtmap := ResourceTmplMap{}
+	if err := yaml.Unmarshal(buf.Bytes(), rtmap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ResourceTmplMap: %w", err)
+	}
+
+	return rtmap, nil
 }
