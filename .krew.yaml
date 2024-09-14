@@ -5,72 +5,72 @@ metadata:
 spec:
   version: {{ .TagName }}
   platforms:
-    - selector:
-        matchLabels:
-          os: linux
-          arch: amd64
-      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_linux_amd64.tar.gz" .TagName }}
-      files:
-        - from: "./output"
-          to: "."
-        - from: LICENSE
-          to: "."
-      bin: "output"
-    - selector:
-        matchLabels:
-          os: linux
-          arch: arm64
-      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_linux_arm64.tar.gz" .TagName }}
-      files:
-        - from: "./output"
-          to: "."
-        - from: LICENSE
-          to: "."
-      bin: "output"
-    - selector:
-        matchLabels:
-          os: darwin
-          arch: amd64
-      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_darwin_amd64.tar.gz" .TagName }}
-      files:
-        - from: "./output"
-          to: "."
-        - from: LICENSE
-          to: "."
-      bin: "output"
-    - selector:
-        matchLabels:
-          os: darwin
-          arch: arm64
-      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_darwin_arm64.tar.gz" .TagName }}
-      files:
-        - from: "./output"
-          to: "."
-        - from: LICENSE
-          to: "."
-      bin: "output"
-    - selector:
-        matchLabels:
-          os: windows
-          arch: amd64
-      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_windows_amd64.zip" .TagName }}
-      files:
-        - from: "/output.exe"
-          to: "."
-        - from: LICENSE
-          to: "."
-      bin: "output.exe"
-    - selector:
-        matchLabels:
-          os: windows
-          arch: arm64
-      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_windows_arm64.zip" .TagName }}
-      files:
-        - from: "/output.exe"
-          to: "."
-        - from: LICENSE
-          to: "."
-      bin: "output.exe"
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_linux_amd64.tar.gz" .TagName }}
+    files:
+    - from: "./output"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "output"
+  - selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+    {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_linux_arm64.tar.gz" .TagName }}
+    files:
+    - from: "./output"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "output"
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_darwin_amd64.tar.gz" .TagName }}
+    files:
+    - from: "./output"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "output"
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_darwin_arm64.tar.gz" .TagName }}
+    files:
+    - from: "./output"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "output"
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_windows_amd64.zip" .TagName }}
+    files:
+    - from: "/output.exe"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "output.exe"
+  - selector:
+      matchLabels:
+        os: windows
+        arch: arm64
+    {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_windows_arm64.zip" .TagName }}
+    files:
+    - from: "/output.exe"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "output.exe"
   shortDescription: Set custom output format for specific resources/namespaces.
   homepage: https://github.com/GrigoriyMikhalkin/kubectl-output
   description: |
