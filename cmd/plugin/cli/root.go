@@ -11,10 +11,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var (
-	KubernetesConfigFlags *genericclioptions.ConfigFlags
-)
-
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "output",
@@ -54,11 +50,8 @@ Example: kubectl output set pods -o custom-columns=NAME:.metadata.name,STATUS:.s
 	}
 
 	cobra.OnInitialize(initConfig)
-
-	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
-	KubernetesConfigFlags.AddFlags(cmd.Flags())
-
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+
 	return cmd
 }
 
@@ -66,6 +59,8 @@ func InitAndExecute() {
 	rootCmd := RootCmd()
 
 	// Get command
+	kubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
+	kubernetesConfigFlags.AddFlags(getCmd.Flags())
 	rootCmd.AddCommand(getCmd)
 
 	// Set command
