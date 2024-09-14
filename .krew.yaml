@@ -3,14 +3,13 @@ kind: Plugin
 metadata:
   name: output
 spec:
-  version: "v0.1.2"
+  version: {{ .TagName }}
   platforms:
     - selector:
         matchLabels:
           os: linux
           arch: amd64
-      uri: https://github.com/{{ .Owner }}/{{ .Repo }}/releases/download/{{ .TagName }}/output_linux_amd64.tar.gz
-      sha256: ""
+      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_linux_amd64.tar.gz" .TagName }}
       files:
         - from: "./output"
           to: "."
@@ -21,8 +20,7 @@ spec:
         matchLabels:
           os: linux
           arch: arm64
-      uri: https://github.com/{{ .Owner }}/{{ .Repo }}/releases/download/{{ .TagName }}/output_linux_arm64.tar.gz
-      sha256: ""
+      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_linux_arm64.tar.gz" .TagName }}
       files:
         - from: "./output"
           to: "."
@@ -33,8 +31,7 @@ spec:
         matchLabels:
           os: darwin
           arch: amd64
-      uri: https://github.com/{{ .Owner }}/{{ .Repo }}/releases/download/{{ .TagName }}/output_darwin_amd64.tar.gz
-      sha256: ""
+      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_darwin_amd64.tar.gz" .TagName }}
       files:
         - from: "./output"
           to: "."
@@ -45,8 +42,7 @@ spec:
         matchLabels:
           os: darwin
           arch: arm64
-      uri: https://github.com/{{ .Owner }}/{{ .Repo }}/releases/download/{{ .TagName }}/output_darwin_arm64.tar.gz
-      sha256: ""
+      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_darwin_arm64.tar.gz" .TagName }}
       files:
         - from: "./output"
           to: "."
@@ -57,8 +53,7 @@ spec:
         matchLabels:
           os: windows
           arch: amd64
-      uri: https://github.com/{{ .Owner }}/{{ .Repo }}/releases/download/{{ .TagName }}/output_windows_amd64.zip
-      sha256: ""
+      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_windows_amd64.zip" .TagName }}
       files:
         - from: "/output.exe"
           to: "."
@@ -69,8 +64,7 @@ spec:
         matchLabels:
           os: windows
           arch: arm64
-      uri: https://github.com/{{ .Owner }}/{{ .Repo }}/releases/download/{{ .TagName }}/output_windows_arm64.zip
-      sha256: ""
+      {{addURIAndSha "https://github.com/GrigoriyMikhalkin/kubectl-output/releases/download/{{ .TagName }}/output_windows_arm64.zip" .TagName }}
       files:
         - from: "/output.exe"
           to: "."
@@ -78,7 +72,7 @@ spec:
           to: "."
       bin: "output.exe"
   shortDescription: Set custom output format for specific resources/namespaces.
-  homepage: https://github.com/{{ .Owner }}/{{ .Repo }}
+  homepage: https://github.com/GrigoriyMikhalkin/kubectl-output
   description: |
     This plugin allows you to set custom outputs for specific resources/namespaces. 
     Fo that to work you'll need to use kubectl-output as a wrapper for `kubectl get ...` command.
