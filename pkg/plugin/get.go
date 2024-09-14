@@ -32,8 +32,8 @@ func RunGetCmd(args []string, cmdLine []string) {
 		if strings.HasPrefix(t, "--output") || strings.HasPrefix(t, "-o") {
 			if t != "--output" && t != "-o" {
 				output = strings.TrimPrefix(t, "--output")
-				output = strings.TrimPrefix(t, "-o")
-				output = strings.TrimPrefix(t, "=")
+				output = strings.TrimPrefix(output, "-o")
+				output = strings.TrimPrefix(output, "=")
 			} else {
 				// Check that next argument is not a flag
 				nextOpt := getOpts[i+1]
@@ -45,8 +45,8 @@ func RunGetCmd(args []string, cmdLine []string) {
 		if strings.HasPrefix(t, "--namespace") || strings.HasPrefix(t, "-n") {
 			if t != "--namespace" && t != "-n" {
 				ns = strings.TrimPrefix(t, "--namespace")
-				ns = strings.TrimPrefix(t, "-n")
-				ns = strings.TrimPrefix(t, "=")
+				ns = strings.TrimPrefix(ns, "-n")
+				ns = strings.TrimPrefix(ns, "=")
 			} else {
 				// Check that next argument is not a flag
 				nextOpt := getOpts[i+1]
@@ -57,40 +57,45 @@ func RunGetCmd(args []string, cmdLine []string) {
 		}
 	}
 
-	if output == "" {
-		// Read template config file.
-		// If resource is found in the file, set --output/-o flag to the value from the file
-		// If resource is not found in the file, set --output/-o flag to default value
-		f, err := openTmplFile()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		defer f.Close()
+	// Read template config file.
+	// If resource is found in the file, set --output/-o flag to the value from the file
+	// If resource is not found in the file, set --output/-o flag to default value
+	f, err := openTmplFile()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
 
-		rtmap, err := unmarshalResourceTmplMap(f)
-		if err != nil {
-			log.Fatalln(err)
+	rtmap, err := unmarshalResourceTmplMap(f)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	r := rtmap[resourceName]
+	if r != nil {
+		var cc string
+
+		if output != "" {
+			if tmpl, ok := r.Templates[output]; ok {
+				cc = fmt.Sprintf("custom-columns=%s", tmpl)
+			}
 		}
 
-		r := rtmap[resourceName]
-		if r != nil {
-			var cc string
-			if ns != "" {
-				log.Println(fmt.Sprintf("Namespace: %s", ns))
-				if tmplName, _ := r.Namespaces[ns]; tmplName != "" {
-					if tmpl, ok := r.Templates[tmplName]; ok {
-						cc = fmt.Sprintf("custom-columns=%s", tmpl)
-					}
+		if cc == "" && ns != "" {
+			if tmplName, _ := r.Namespaces[ns]; tmplName != "" {
+				if tmpl, ok := r.Templates[tmplName]; ok {
+					cc = fmt.Sprintf("custom-columns=%s", tmpl)
 				}
 			}
-			if cc == "" && r.Default != "" {
-				cc = fmt.Sprintf("custom-columns=%s", r.Templates[r.Default])
-			}
+		}
 
-			if cc != "" {
-				getOpts = append(getOpts, "--output", cc)
+		if cc == "" && r.Default != "" {
+			cc = fmt.Sprintf("custom-columns=%s", r.Templates[r.Default])
+		}
 
-			}
+		if cc != "" {
+			getOpts = append(getOpts, "--output", cc)
+
 		}
 	}
 
