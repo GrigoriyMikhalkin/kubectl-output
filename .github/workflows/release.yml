@@ -20,5 +20,5 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GR_TOKEN }}
-#      - name: Update new version in krew-index
-#        uses: rajatjindal/krew-release-bot@master
+      - name: Update new version in krew-index
+        uses: rajatjindal/krew-release-bot@master
