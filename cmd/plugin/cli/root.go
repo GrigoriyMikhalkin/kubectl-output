@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -28,13 +29,9 @@ Example: kubectl output set pods -o custom-columns=NAME:.metadata.name,STATUS:.s
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(os.Args[1:])
-
 			// Check if kubectl executable is available
 			if _, err := exec.LookPath("kubectl"); err != nil {
 				return fmt.Errorf("kubectl executable not found in PATH")
-			} else {
-				fmt.Println("kubectl executable found")
 			}
 
 			// Call kubectl with provided args
@@ -51,6 +48,10 @@ Example: kubectl output set pods -o custom-columns=NAME:.metadata.name,STATUS:.s
 
 	cobra.OnInitialize(initConfig)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+
+	if strings.HasPrefix(filepath.Base(os.Args[0]), "kubectl-") {
+		cmd.SetUsageTemplate(kubectlUsageTemplate)
+	}
 
 	return cmd
 }
@@ -78,3 +79,34 @@ func InitAndExecute() {
 func initConfig() {
 	viper.AutomaticEnv()
 }
+
+var kubectlUsageTemplate = `Usage:{{if .Runnable}}
+  kubectl {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  kubectl {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
+
+Available Commands:{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
+
+{{.Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .AllChildCommandsHaveGroup}}
+
+Additional Commands:{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "kubectl {{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
