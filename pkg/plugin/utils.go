@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -20,21 +21,33 @@ const (
 	tmplFileName = "resource_tmpl_map.yaml"
 )
 
-func getFullResourceName(resource string) (string, error) {
-	// Should split resource by '.' to extract type, version and group if available
-	var t, v, g string
-	resourceParts := strings.Split(resource, ".")
-	switch len(resourceParts) {
-	case 1:
-		t = resourceParts[0]
-	case 2:
-		t, g = resourceParts[0], resourceParts[1]
-	case 3:
-		t, v, g = resourceParts[0], resourceParts[1], resourceParts[2]
-	default:
-		return "", fmt.Errorf("invalid resource name: %s", resource)
+// splitResourceName splits resource name into type, version and group, if they are specified.
+func splitResourceName(resource string) (typ, version, group string) {
+	var gv string
+
+	typ = resource
+	parts := strings.SplitN(resource, ".", 2)
+	if len(parts) > 1 {
+		typ, gv = parts[0], parts[1]
+		gvParts := strings.SplitN(gv, ".", 2)
+		if versionMatched, _ := regexp.MatchString(`^v\d+((alpha|beta)\d+)?$`, gvParts[0]); versionMatched {
+			if len(gvParts) > 1 {
+				version, group = gvParts[0], gvParts[1]
+			} else {
+				version = gv
+			}
+		} else {
+			group = gv
+		}
 	}
 
+	return typ, version, group
+}
+
+// getFullResourceName returns full resource name in format <resource>.<group>
+// <resource>.<version>.<group> if version is specified.
+func getFullResourceName(resource string) (string, error) {
+	t, v, g := splitResourceName(resource)
 	groups, resources := discoverAPIResources()
 
 	groupVersions := make(map[string]struct{})
@@ -65,18 +78,19 @@ func getFullResourceName(resource string) (string, error) {
 				for _, r := range resourceList.APIResources {
 					matches := r.Name == t || r.SingularName == t || slices.Contains(r.ShortNames, t)
 					if matches {
-						if fullName != "" {
-							return "", fmt.Errorf("resource name %s is too ambiguous", t)
-						}
-
 						gv := strings.Split(resourceList.GroupVersion, "/")
 						if len(gv) == 1 {
 							// Means that group is not specified
 							fullName = r.Name
 						} else {
-							fullName = fmt.Sprintf("%s.%s.%s", r.Name, gv[1], gv[0])
+							if v == "" {
+								fullName = fmt.Sprintf("%s.%s", r.Name, gv[0])
+							} else {
+								fullName = fmt.Sprintf("%s.%s.%s", r.Name, gv[1], gv[0])
+							}
 						}
-						break
+
+						return fullName, nil
 					}
 				}
 			}
@@ -84,27 +98,22 @@ func getFullResourceName(resource string) (string, error) {
 			for _, r := range resourceList.APIResources {
 				matches := r.Name == t || r.SingularName == t || slices.Contains(r.ShortNames, t)
 				if matches {
-					if fullName != "" {
-						return "", fmt.Errorf("resource name %s is too ambiguous", t)
-					}
 					gv := strings.Split(resourceList.GroupVersion, "/")
 					if len(gv) == 1 {
 						// Means that group is not specified
 						fullName = r.Name
 					} else {
-						fullName = fmt.Sprintf("%s.%s.%s", r.Name, gv[1], gv[0])
+						fullName = fmt.Sprintf("%s.%s", r.Name, gv[0])
 					}
-					break
+
+					return fullName, nil
 				}
 			}
 		}
 
 	}
 
-	if fullName == "" {
-		return "", fmt.Errorf("resource %s not found", resource)
-	}
-	return fullName, nil
+	return "", fmt.Errorf("resource %s not found", resource)
 }
 
 func discoverAPIResources() ([]*v1.APIGroup, []*v1.APIResourceList) {
