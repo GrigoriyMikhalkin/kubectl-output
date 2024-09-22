@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -27,22 +26,6 @@ Example: kubectl output set pods -o custom-columns=NAME:.metadata.name,STATUS:.s
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlags(cmd.Flags())
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Check if kubectl executable is available
-			if _, err := exec.LookPath("kubectl"); err != nil {
-				return fmt.Errorf("kubectl executable not found in PATH")
-			}
-
-			// Call kubectl with provided args
-			c := exec.Command("kubectl", os.Args[1:]...)
-			c.Stdout = os.Stdout
-			c.Stderr = os.Stderr
-			if err := c.Run(); err != nil {
-				return fmt.Errorf("failed to run kubectl: %w", err)
-			}
-
-			return nil
 		},
 	}
 
