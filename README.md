@@ -13,6 +13,12 @@ The config is stored in `~/.kube-output/resource_tmpl_map.yaml` file. Which is l
 kubectl output get pods -n test
 ```
 
+### Installation
+`kubectl-output` can be installed with `krew` plugin manager:
+```shell
+kubectl krew install output
+```
+
 ### Examples:
 ```shell
 alias ko="kubectl output"
